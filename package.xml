@@ -1,0 +1,11 @@
+<package format="2">
+  <name>planning_benchmark</name>
+  <version>1.0.0</version>
+  <description>
+  Planning benchmark
+  </description>
+  <maintainer email="benjamin_alt@outlook.com">Benjamin Alt</maintainer>
+  <license>BSD</license>
+
+  <exec_depend>pr2_moveit_config</exec_depend>
+</package>
