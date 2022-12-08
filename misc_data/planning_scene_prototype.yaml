@@ -19,22 +19,22 @@ robot_state:
         nsecs: 0
       frame_id: odom_combined
     joint_names: ['world_joint']
-    joint_transforms: 
-      - 
-        translation: 
+    transforms:
+      -
+        translation:
           x: 0.0
           y: 0.0
           z: 0.0
-        rotation: 
+        rotation:
           x: 0.0
           y: 0.0
           z: 0.0
           w: 1.0
   attached_collision_objects: []
 robot_model_name: pr2
-robot_model_root: base_footprint
-fixed_frame_transforms: 
-  - 
+#robot_model_root: base_footprint
+fixed_frame_transforms:
+  -
     header: 
       seq: 0
       stamp: 
@@ -538,13 +538,13 @@ world:
       id: ''
       resolution: 0.0
       data: []
-  collision_map: 
-    header: 
-      seq: 0
-      stamp: 
-        secs: 0
-        nsecs: 0
-      frame_id: odom_combined
-    boxes: []
+#  collision_map:
+#    header:
+#      seq: 0
+#      stamp:
+#        secs: 0
+#        nsecs: 0
+#      frame_id: odom_combined
+#    boxes: []
 is_diff: False
 

@@ -18,7 +18,7 @@ ROS_JOINT_NAMES =  ['fl_caster_rotation_joint', 'fl_caster_l_wheel_joint', 'fl_c
 @fu.once
 def make_planning_scene_pub():
     rospy.sleep(1)
-    out = rospy.Publisher("/planning_scene", mm.PlanningScene)
+    out = rospy.Publisher("/planning_scene", mm.PlanningScene, queue_size=10)
     rospy.sleep(1)
     return out
 
@@ -79,7 +79,7 @@ def rave_env_to_ros(env):
             rstate.multi_dof_joint_state.header.frame_id = 'odom_combined'
             rstate.multi_dof_joint_state.header.stamp = rospy.Time.now()
             rstate.multi_dof_joint_state.joint_names =  ['world_joint']                        
-            rstate.multi_dof_joint_state.joint_transforms = [ RosTransformFromRaveMatrix(body.GetTransform())]
+            rstate.multi_dof_joint_state.transforms = [ RosTransformFromRaveMatrix(body.GetTransform())]
 
         else:
             

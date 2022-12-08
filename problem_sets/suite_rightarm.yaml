@@ -12,13 +12,13 @@ configurations:
     planner: ompl
     args: ["--ompl_planner_id=LBKPIECEkConfigDefault"]
 
-  - name: chomp
-    planner: chomp
-    args: ["--chomp_argstr=comp", "--max_planning_time=3", "--n_steps=101"]
+  # - name: chomp
+  #   planner: chomp
+  #   args: ["--chomp_argstr=comp", "--max_planning_time=3", "--n_steps=101"]
 
-  - name: chomp-multi_init
-    planner: chomp
-    args: ["--chomp_argstr=comp", "--max_planning_time=3", "--n_steps=101", "--multi_init"]
+  # - name: chomp-multi_init
+  #   planner: chomp
+  #   args: ["--chomp_argstr=comp", "--max_planning_time=3", "--n_steps=101", "--multi_init"]
 
 # - name: chomp-hmc
 #   planner: chomp
@@ -29,7 +29,7 @@ configurations:
 
 problem_sets:
   - bookshelves_rightarm.yaml
-  - countertop_rightarm.yaml
-  - industrial_rightarm.yaml
-  - industrial_rightarm2.yaml
-  - tunnel_rightarm.yaml
+  # - countertop_rightarm.yaml
+  # - industrial_rightarm.yaml
+  # - industrial_rightarm2.yaml
+  # - tunnel_rightarm.yaml
