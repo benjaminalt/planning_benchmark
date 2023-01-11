@@ -1,28 +1,33 @@
 configurations:
-  - name: trajopt
-    planner: trajopt
-  - name: trajopt-multi_init
-    planner: trajopt
-    args: ["--multi_init"]
+#  - name: chomp
+#    planner: chomp
+#    args: ["--chomp_argstr=comp", "--max_planning_time=3", "--n_steps=101"]
+#  - name: chomp-multi_init
+#    planner: chomp
+#    args: ["--chomp_argstr=comp", "--max_planning_time=3", "--n_steps=101", "--multi_init"]
+#  - name: chomp-hmc
+#    planner: chomp
+#    args: ["--chomp_argstr=hmc-seed0", "--max_planning_time=5", "--n_steps=101"]
 
-  - name: ompl-RRTConnect
-    planner: ompl
-    args: ["--ompl_planner_id=RRTConnectkConfigDefault"]
-  - name: ompl-LBKPIECE
-    planner: ompl
-    args: ["--ompl_planner_id=LBKPIECEkConfigDefault"]
+#  - name: trajopt
+#    planner: trajopt
+#  - name: trajopt-multi_init
+#    planner: trajopt
+#    args: ["--multi_init"]
 
-  # - name: chomp
-  #   planner: chomp
-  #   args: ["--chomp_argstr=comp", "--max_planning_time=3", "--n_steps=101"]
+#  - name: ompl-RRTConnect
+#    planner: ompl
+#    args: ["--ompl_planner_id=RRTConnectkConfigDefault"]
+#  - name: ompl-LBKPIECE
+#    planner: ompl
+#    args: ["--ompl_planner_id=LBKPIECEkConfigDefault"]
+  - name: dgpmp2
+    planner: dgpmp2
+    args: [
+      "--python_env=~/python_envs/dgpmp2/bin/activate",
+      "--dgpmp2_dir=~/catkin_ws/src/dgpmp2"
+    ]
 
-  # - name: chomp-multi_init
-  #   planner: chomp
-  #   args: ["--chomp_argstr=comp", "--max_planning_time=3", "--n_steps=101", "--multi_init"]
-
-# - name: chomp-hmc
-#   planner: chomp
-#   args: ["--chomp_argstr=hmc-seed0", "--max_planning_time=5", "--n_steps=101"]
 # - name: chomp-hmc-multi_init
 #   planner: chomp
 #   args: ["--chomp_argstr=hmc-seed0", "--max_planning_time=5", "--n_steps=101", "--multi_init"]

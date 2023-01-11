@@ -8,4 +8,5 @@
   <license>BSD</license>
 
   <exec_depend>pr2_moveit_config</exec_depend>
+  <exec_depend>collada_urdf</exec_depend>
 </package>

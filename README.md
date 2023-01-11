@@ -22,6 +22,8 @@ The benchmarking code depends on the following packages:
 
 - Various Python packages: NumPy, YAML, JSON
 
+- Various ROS packages: ros-melodic-pr2-*
+
 Before running the benchmarks, you must install the planners:
 
 - trajopt, the planner described in this paper (see http://rll.berkeley.edu/trajopt/)

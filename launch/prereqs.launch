@@ -1,0 +1,4 @@
+<launch>
+    <include file="$(find dgpmp2)/launch/planning_server.launch"/>
+    <include file="$(find planning_benchmark)/launch/moveit_without_retimer.launch"/>
+</launch>
