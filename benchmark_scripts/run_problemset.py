@@ -74,6 +74,7 @@ import json
 import planning_benchmark_common.func_utils as fu
 
 TMP_DATA_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), os.pardir, "tmp_data"))
+PLANNER_CONFIGS_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), os.pardir, "planner_configs"))
 
 LEFT_POSTURES = [
     [-0.243379, 0.103374, -1.6, -2.27679, 3.02165, -2.03223, -1.6209],  # chest fwd
@@ -513,14 +514,20 @@ def chomp_plan(robot, group_name, active_joint_names, active_affine, target_dof_
 
 def dgpmp2_plan(problemset, rave_robot, group_name, active_joint_names, active_affine, target_dof_values, init_trajs):
     global DGPMP_ITER
-    datadir = osp.join(TMP_DATA_DIR, "dgpmp2")
-    n_points = args.n_steps  # TODO: Maybe use this?
 
     start_dof_values = init_trajs[0][0].tolist()
 
     scene_filename = problemset["env_file"].split(".")[0] + ".scene"
     scene_filepath = osp.join(pbc.scenefile_dir, scene_filename)
     pr2_urdf_path = "/home/alt/catkin_ws/src/am-robots-python/am_robots_python/urdf/pr2/pr2.urdf"
+
+    # Load planner config
+    env_name = problemset["env_file"].split(".")[0]
+    dgpmp_config_path = PLANNER_CONFIGS_DIR + "/dgpmp2_" + env_name + ".json"
+    with open(dgpmp_config_path) as dgpmp_config_file:
+        dgpmp_config = json.load(dgpmp_config_file)
+
+    subdirname = "iteration_" + str(DGPMP_ITER)
 
     dgpmp2.configure(scene_filepath,
                      {
@@ -534,36 +541,27 @@ def dgpmp2_plan(problemset, rave_robot, group_name, active_joint_names, active_a
                          "ee_link_name": "r_gripper_palm_link",
                          "active_joint_names": problemset["active_joints"]
                      },
-                     {
-                         "gp_params": {
-                             "K_s": 0.01,
-                             "K_g": 0.01,
-                             "K_obs": 0.01,
-                             "K_gp": 1,
-                             "K_lims": 0.01
-                         },
-                         "optim_params": {
-                             "method": "gauss_newton",
-                             "reg": 1.0,
-                             "init_lr": 0.01,
-                             "max_iters": 500,
-                             "error_patience": 500
-                         }
-                     })
+                     dgpmp_config, subdirname)
 
     t_start = time()
     status = PlannerStatus.SUCCESS
+
+    camera_distance = 1.06
+    camera_yaw = -26.8
+    camera_pitch = -18.2
+    camera_target_position = [0.47, -0.49, 0.76]
 
     traj = dgpmp2.plan({
         "active_joint_names": active_joint_names,
         "start_conf": start_dof_values,
         "goal_conf": target_dof_values,
         "vel": 0.05
-    }, "iteration_" + str(DGPMP_ITER))
+    }, subdirname)
 
     t_total = time() - t_start
 
-    dgpmp2.visualize_plan(traj, "iteration_" + str(DGPMP_ITER), 1.06, -26.8, -18.2, [0.47, -0.49, 0.76])
+    dgpmp2.visualize_plan(traj, "iteration_" + str(DGPMP_ITER), camera_distance, camera_yaw, camera_pitch,
+                          camera_target_position)
     DGPMP_ITER += 1
 
     return status, t_total, traj, "ok"
@@ -674,8 +672,8 @@ def init_env(problemset):
                                                              "active_affine"] == 0 else "pr2_with_spheres_fullbody.robot.xml"
         robot2file["pr2"] = osp.join(pbc.envfile_dir, chomp_pr2_file)
     elif args.planner == "dgpmp2":
-        # plan_func = partial(dgpmp2_plan, problemset)
-        plan_func = partial(dgpmp2_search, problemset)
+        plan_func = partial(dgpmp2_plan, problemset)
+        # plan_func = partial(dgpmp2_search, problemset)
 
     env.Load(osp.join(pbc.envfile_dir, problemset["env_file"]))
     env.Load(robot2file[problemset["robot_name"]])
