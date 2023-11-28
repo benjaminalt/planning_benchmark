@@ -44,3 +44,7 @@ fastmath
 *.wpu
 
 doc/_build
+/tmp_data/
+/RESULTS_FILE.pkl
+/notes.md
+/out.txt

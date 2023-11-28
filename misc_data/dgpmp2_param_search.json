@@ -1,0 +1,16 @@
+{
+    "gp_params": {
+        "K_s": 0.01,
+        "K_g": 0.01,
+        "K_obs": [0.01, 0.05],
+        "K_gp": 1,
+        "K_lims": 0.01
+    },
+   "optim_params": {
+       "method": "gauss_newton",
+       "reg": 1.0,
+       "init_lr": [0.005, 0.03],
+       "max_iters": 100,
+       "error_patience": 50
+   }
+}

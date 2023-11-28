@@ -1,4 +1,5 @@
 import argparse, sys
+import random
 import stat
 import subprocess
 from functools import partial
@@ -91,6 +92,8 @@ KITCHEN_WAYPOINTS = [
 ]
 
 dgpmp2 = ServerProxy("http://localhost:3456/dgpmp2")
+DGPMP_ITER = 0
+
 
 class bcolors:
     HEADER = '\033[95m'
@@ -256,25 +259,6 @@ def get_chomp_module(env):
 
 def setup_chomp(env):
     get_chomp_module(env)
-
-
-def setup_dgpmp2(problemset):
-    scene_filename = problemset["env_file"].split(".")[0] + ".scene"
-    scene_filepath = osp.join(pbc.scenefile_dir, scene_filename)
-    pr2_urdf_path = "/home/alt/catkin_ws/src/am-robots-python/am_robots_python/urdf/pr2/pr2.urdf"
-
-    dgpmp2.set_env(scene_filepath,
-                   {
-                       "voxel_size": 0.05,
-                       "collision_padding": 0.01
-                   },
-                   {
-                       "urdf": pr2_urdf_path,
-                       "good_initial_conf": problemset["default_joint_values"],
-                       "good_initial_conf_joint_names": problemset["joint_names"],
-                       "ee_link_name": "r_gripper_palm_link",
-                       "active_joint_names": problemset["active_joints"]
-                   })
 
 
 def gen_init_trajs(problemset, robot, n_steps, start_joints, end_joints):
@@ -527,13 +511,45 @@ def chomp_plan(robot, group_name, active_joint_names, active_affine, target_dof_
     return status, t_total, traj, msg
 
 
-def dgpmp2_plan(rave_robot, group_name, active_joint_names, active_affine, target_dof_values, init_trajs):
+def dgpmp2_plan(problemset, rave_robot, group_name, active_joint_names, active_affine, target_dof_values, init_trajs):
+    global DGPMP_ITER
     datadir = osp.join(TMP_DATA_DIR, "dgpmp2")
-    n_points = args.n_steps # TODO: Maybe use this?
+    n_points = args.n_steps  # TODO: Maybe use this?
 
     start_dof_values = init_trajs[0][0].tolist()
 
-    dgpmp2.configure()
+    scene_filename = problemset["env_file"].split(".")[0] + ".scene"
+    scene_filepath = osp.join(pbc.scenefile_dir, scene_filename)
+    pr2_urdf_path = "/home/alt/catkin_ws/src/am-robots-python/am_robots_python/urdf/pr2/pr2.urdf"
+
+    dgpmp2.configure(scene_filepath,
+                     {
+                         "voxel_size": 0.05,
+                         "collision_padding": 0.01
+                     },
+                     {
+                         "urdf": pr2_urdf_path,
+                         "good_initial_conf": problemset["default_joint_values"],
+                         "good_initial_conf_joint_names": problemset["joint_names"],
+                         "ee_link_name": "r_gripper_palm_link",
+                         "active_joint_names": problemset["active_joints"]
+                     },
+                     {
+                         "gp_params": {
+                             "K_s": 0.01,
+                             "K_g": 0.01,
+                             "K_obs": 0.01,
+                             "K_gp": 1,
+                             "K_lims": 0.01
+                         },
+                         "optim_params": {
+                             "method": "gauss_newton",
+                             "reg": 1.0,
+                             "init_lr": 0.01,
+                             "max_iters": 500,
+                             "error_patience": 500
+                         }
+                     })
 
     t_start = time()
     status = PlannerStatus.SUCCESS
@@ -542,12 +558,96 @@ def dgpmp2_plan(rave_robot, group_name, active_joint_names, active_affine, targe
         "active_joint_names": active_joint_names,
         "start_conf": start_dof_values,
         "goal_conf": target_dof_values,
-        "vel": 0.1
-    })
+        "vel": 0.05
+    }, "iteration_" + str(DGPMP_ITER))
 
     t_total = time() - t_start
 
-    dgpmp2.visualize_plan(traj, 1.06, -26.8, -18.2, [0.47, -0.49, 0.76])
+    dgpmp2.visualize_plan(traj, "iteration_" + str(DGPMP_ITER), 1.06, -26.8, -18.2, [0.47, -0.49, 0.76])
+    DGPMP_ITER += 1
+
+    return status, t_total, traj, "ok"
+
+
+def dgpmp2_search(problemset, rave_robot, group_name, active_joint_names, active_affine, target_dof_values, init_trajs):
+    global DGPMP_ITER
+
+    start_dof_values = init_trajs[0][0].tolist()
+
+    scene_filename = problemset["env_file"].split(".")[0] + ".scene"
+    scene_filepath = osp.join(pbc.scenefile_dir, scene_filename)
+    pr2_urdf_path = "/home/alt/catkin_ws/src/am-robots-python/am_robots_python/urdf/pr2/pr2.urdf"
+
+    with open(osp.join(pbc.miscdata_dir, "dgpmp2_param_search.json")) as param_search_file:
+        cfg = json.load(param_search_file)
+
+    for search_iter in range(100):
+        # Default config
+        planner_config = {
+            "gp_params": {
+                "K_s": 0.01,
+                "K_g": 0.01,
+                "K_obs": 0.01,
+                "K_gp": 1,
+                "K_lims": 0.01
+            },
+            "optim_params": {
+                "method": "gauss_newton",
+                "reg": 1.0,
+                "init_lr": 0.01,
+                "max_iters": 500,
+                "error_patience": 500
+            }
+        }
+
+        # Sample random config
+        for category in cfg.keys():
+            for key, value in cfg[category].items():
+                if isinstance(value, list):
+                    val = random.uniform(value[0], value[1])
+                else:
+                    val = value
+                planner_config[category][key] = val
+
+        subdirname = "iteration_" + str(DGPMP_ITER) + "_search_" + str(search_iter)
+
+        dgpmp2.configure(scene_filepath,
+                         {
+                             "voxel_size": 0.05,
+                             "collision_padding": 0.01
+                         },
+                         {
+                             "urdf": pr2_urdf_path,
+                             "good_initial_conf": problemset["default_joint_values"],
+                             "good_initial_conf_joint_names": problemset["joint_names"],
+                             "ee_link_name": "r_gripper_palm_link",
+                             "active_joint_names": problemset["active_joints"]
+                         },
+                         planner_config, subdirname)
+
+        t_start = time()
+        status = PlannerStatus.SUCCESS
+
+        camera_distance = 1.06
+        camera_yaw = -26.8
+        camera_pitch = -18.2
+        camera_target_position = [0.47, -0.49, 0.76]
+
+        # dgpmp2.visualize_env(problemset["default_joint_values"], problemset["joint_names"], subdirname, camera_distance, camera_yaw,
+        #                       camera_pitch, camera_target_position)
+
+        traj = dgpmp2.plan({
+            "active_joint_names": active_joint_names,
+            "start_conf": start_dof_values,
+            "goal_conf": target_dof_values,
+            "vel": 0.05
+        }, subdirname)
+
+        t_total = time() - t_start
+
+        dgpmp2.visualize_plan(traj, "iteration_" + str(DGPMP_ITER) + "_search_" + str(search_iter),
+                              camera_distance, camera_yaw, camera_pitch, camera_target_position)
+    DGPMP_ITER += 1
 
     return status, t_total, traj, "ok"
 
@@ -574,8 +674,8 @@ def init_env(problemset):
                                                              "active_affine"] == 0 else "pr2_with_spheres_fullbody.robot.xml"
         robot2file["pr2"] = osp.join(pbc.envfile_dir, chomp_pr2_file)
     elif args.planner == "dgpmp2":
-        setup_dgpmp2(problemset)
-        plan_func = dgpmp2_plan
+        # plan_func = partial(dgpmp2_plan, problemset)
+        plan_func = partial(dgpmp2_search, problemset)
 
     env.Load(osp.join(pbc.envfile_dir, problemset["env_file"]))
     env.Load(robot2file[problemset["robot_name"]])
@@ -635,7 +735,7 @@ def main():
         success = status == PlannerStatus.SUCCESS
         print '%s[%d/%d] %s%s' % (bcolors.OKGREEN if success else bcolors.FAIL, i + 1, len(problem_joints),
                                   ('success' if success else 'FAILURE') + (': ' + msg if msg else '') + (
-                                              ' (code: %s)' % status), bcolors.ENDC)
+                                          ' (code: %s)' % status), bcolors.ENDC)
         res = {"success": success, "status": status, "time": t_total}
         if args.outfile is not sys.stdout:
             res["traj"] = traj

@@ -48,14 +48,14 @@ states:
             [ 0.2743,  0.4088, -0.5291, -0.4304, -0.9985, -1.0032, -1.7278]
 
 problems:
-    - start:
-        active_dof_values: *state0
-      goal:
-        active_dof_values: *state1
-    - start:
-        active_dof_values: *state0
-      goal:
-        active_dof_values: *state2
+#    - start:
+#        active_dof_values: *state0
+#      goal:
+#        active_dof_values: *state1
+#    - start:
+#        active_dof_values: *state0
+#      goal:
+#        active_dof_values: *state2
     - start:
         active_dof_values: *state0
       goal:
