@@ -544,7 +544,6 @@ def dgpmp2_plan(problemset, rave_robot, group_name, active_joint_names, active_a
                      dgpmp_config, subdirname)
 
     t_start = time()
-    status = PlannerStatus.SUCCESS
 
     camera_distance = 1.06
     camera_yaw = -26.8
@@ -560,11 +559,22 @@ def dgpmp2_plan(problemset, rave_robot, group_name, active_joint_names, active_a
 
     t_total = time() - t_start
 
-    dgpmp2.visualize_plan(traj, "iteration_" + str(DGPMP_ITER), camera_distance, camera_yaw, camera_pitch,
-                          camera_target_position)
+    # dgpmp2.visualize_plan(traj, "iteration_" + str(DGPMP_ITER), camera_distance, camera_yaw, camera_pitch,
+    #                       camera_target_position)
     DGPMP_ITER += 1
 
-    return status, t_total, traj, "ok"
+    # Check planning result
+    if not traj_in_joint_limits(traj, rave_robot):
+        status = PlannerStatus.FAIL_JOINT_VIOLATION
+        msg = "DGPMP2 failed due to joint violation"
+    elif not traj_is_safe(traj, rave_robot):
+        status = PlannerStatus.FAIL_COLLISION
+        msg = "DGPMP2 failed due to collision"
+    else:
+        status = PlannerStatus.SUCCESS
+        msg = "ok"
+
+    return status, t_total, traj, msg
 
 
 def dgpmp2_search(problemset, rave_robot, group_name, active_joint_names, active_affine, target_dof_values, init_trajs):
